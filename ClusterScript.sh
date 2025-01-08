@@ -5,7 +5,6 @@
 
 # these need to be at the top for Reasons
 aafcworks=1 # manual flag so i only have to change 1 character to disable AAFC when it breaks
-ShotgunDebug=0 # provide "extra debugging" *BITE*
 debl='\033[0;34m' # DEbug BLue
 der='\033[0;31m' # DEbug Red
 recl='\033[0m' # REmove CoLor
@@ -65,28 +64,24 @@ LowQualitize() {
     fi
     sleep 0.5
     # the initial 5
-    if [[ $ShotgunDebug == 0 ]]; then
     DM -dpa "Trying OPUS..."
-        if [[ $nopus == 1 ]]; then
-            echo "NoOPUS has been enabled, skipping OPUS..."
-        else
-            DM -dpa "NoOPUS is disabled... "
-            ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a libopus -b:a 1k "cluster_result/$1_1kbopus_$RANDOM.ogg"
-            ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a libopus -b:a 1k "cluster_result/$1_1kbopus_$RANDOM.opus"
-            ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a libopus -b:a 8k "cluster_result/$1_8kbopus_$RANDOM.ogg"
-            ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a libopus -b:a 8k "cluster_result/$1_8kbopus_$RANDOM.opus"
-        fi
-        DM -dpa "Trying MP3..."
-        ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -b:a 8k -ar 8000 "cluster_result/$1_8kbmp3_$RANDOM.mp3"
-        DM -dpa "Trying SPEEX..."
-        if [[ $nospeex == 1 ]]; then
-            echo "NoSPEEX has been enabled, skipping SPEEX..."
-        else
-            ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -ar 8000 -b:a 1k -acodec libspeex "cluster_result/$1_1kbspeex_$RANDOM.ogg"
-            ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -ar 8000 -b:a 8k -acodec libspeex "cluster_result/$1_8kbspeex_$RANDOM.ogg"
-        fi
+    if [[ $nopus == 1 ]]; then
+        echo "NoOPUS has been enabled, skipping OPUS..."
     else
-        DM -d "Extra Debugging was requested... "
+        DM -dpa "NoOPUS is disabled... "
+        ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a libopus -b:a 1k "cluster_result/$1_1kbopus_$RANDOM.ogg"
+        ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a libopus -b:a 1k "cluster_result/$1_1kbopus_$RANDOM.opus"
+        ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a libopus -b:a 8k "cluster_result/$1_8kbopus_$RANDOM.ogg"
+        ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a libopus -b:a 8k "cluster_result/$1_8kbopus_$RANDOM.opus"
+    fi
+    DM -dpa "Trying MP3..."
+    ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -b:a 8k -ar 8000 "cluster_result/$1_8kbmp3_$RANDOM.mp3"
+    DM -dpa "Trying SPEEX..."
+    if [[ $nospeex == 1 ]]; then
+        echo "NoSPEEX has been enabled, skipping SPEEX..."
+    else
+        ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -ar 8000 -b:a 1k -acodec libspeex "cluster_result/$1_1kbspeex_$RANDOM.ogg"
+        ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -ar 8000 -b:a 8k -acodec libspeex "cluster_result/$1_8kbspeex_$RANDOM.ogg"
     fi
 
     # 3 bit depth 4096hz and dpcm8192
@@ -107,60 +102,66 @@ LowQualitize() {
         DM -d "converting to WAV..."
         ./aafc2wav "aafc_conversions/$1_tmp.aafc" "../cluster_result/$1_dpcm8192hz_$RANDOM"
         DM -d "Removing tempfiles..."
-        rm "aafc_conversions/$1_tmp.aafc" "../$1_tmp.wav"
+        if [[ $keepTempFiles -ne 1 ]]; then
+            rm "aafc_conversions/$1_tmp.aafc" "../$1_tmp.wav"
+        fi
         cd ..
     elif [[ $aafcworks == 0 ]]; then
         echo "AAFC support is currently broken, skipping..."
     fi
 
-    if [[ $ShotgunDebug == 0 ]]; then
-        # CODify
-        DM -dpa "Trying CODify..."
-        if [[ $nopus == 1 ]] || [[ $nospeex == 1 ]]; then
-            echo "NoSPEEX and/or NoOPUS has been enabled, skipping CODify..."
-        else
-            ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -ar 8000 -b:a 1k -acodec libspeex "TEMPSPEEX_$1.$2.ogg" # encode to speex for Effect(tm)
-            ffmpeg -hide_banner -loglevel error -y -i "TEMPSPEEX_$1.$2.ogg" -c:a libopus -b:a 1k "TEMPOPUS_$1.$2.ogg" # encode that speex with OPUS
-            rm "TEMPSPEEX_$1.$2.ogg"
-            ffmpeg -hide_banner -loglevel error -y -i "TEMPOPUS_$1.$2.ogg" -filter:a "volume = 35dB" "TEMPLOUD_$1.$2.wav" # make it loud for that COD Quality(tm)
+    # CODify
+    DM -dpa "Trying CODify..."
+    if [[ $nopus == 1 ]] || [[ $nospeex == 1 ]]; then
+        echo "NoSPEEX and/or NoOPUS has been enabled, skipping CODify..."
+    else
+        ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -ar 8000 -b:a 1k -acodec libspeex "TEMPSPEEX_$1.$2.ogg" # encode to speex for Effect(tm)
+        ffmpeg -hide_banner -loglevel error -y -i "TEMPSPEEX_$1.$2.ogg" -c:a libopus -b:a 1k "TEMPOPUS_$1.$2.ogg" # encode that speex with OPUS
+        ffmpeg -hide_banner -loglevel error -y -i "TEMPOPUS_$1.$2.ogg" -filter:a "volume = 35dB" "TEMPLOUD_$1.$2.wav" # make it loud for that COD Quality(tm)
+        ffmpeg -hide_banner -loglevel error -y -i "TEMPLOUD_$1.$2.wav"  -c:a libopus -b:a 1k "cluster_result/$1_codlobby_$RANDOM.ogg" # encode it with opus again for that Extra Quality(tm)
+        if [[ $keepTempFiles -ne 1 ]]; then
             rm "TEMPOPUS_$1.$2.ogg"
-            ffmpeg -hide_banner -loglevel error -y -i "TEMPLOUD_$1.$2.wav"  -c:a libopus -b:a 1k "cluster_result/$1_codlobby_$RANDOM.ogg" # encode it with opus again for that Extra Quality(tm)
+            rm "TEMPSPEEX_$1.$2.ogg"
             rm "TEMPLOUD_$1.$2.wav"
         fi
+    fi
 
-        # SSDPCM
-        DM -dpa "Trying SSDPCM..."
-        if [[ $nossdpcm == 1 ]]; then
-            echo "NoSSDPCM has been enabled, skipping SSDPCM... "
-        else
-            ffmpeg -hide_banner -loglevel error -i "$1.$2" -ar 11025 "$1_temp11025hz.wav" # take the input and convert it to 11025Hz WAV temporarily
-            ./cluster_SSDPCM/encoder ss1 "$1_temp11025hz.wav" "$1_tempssdpcm.aud" # convert the 11025Hz WAV to 1-bit SSDPCM
-            ./cluster_SSDPCM/encoder decode "$1_tempssdpcm.aud" "cluster_result/$1_1bssdpcm11025_$RANDOM.wav" # convert the 1-bit SSDPCM back to WAV
+    # SSDPCM
+    DM -dpa "Trying SSDPCM..."
+    if [[ $nossdpcm == 1 ]]; then
+        echo "NoSSDPCM has been enabled, skipping SSDPCM... "
+    else
+        ffmpeg -hide_banner -loglevel error -i "$1.$2" -ar 11025 "$1_temp11025hz.wav" # take the input and convert it to 11025Hz WAV temporarily
+        ./cluster_SSDPCM/encoder ss1 "$1_temp11025hz.wav" "$1_tempssdpcm.aud" # convert the 11025Hz WAV to 1-bit SSDPCM
+        ./cluster_SSDPCM/encoder decode "$1_tempssdpcm.aud" "cluster_result/$1_1bssdpcm11025_$RANDOM.wav" # convert the 1-bit SSDPCM back to WAV
+        if [[ $keepTempFiles -ne 1 ]]; then
             rm "$1_temp11025hz.wav" # remove the temporary 11025Hz WAV
             rm "$1_tempssdpcm.aud" # remove the temporary 1-bit SSDPCM
         fi
+    fi
 
-        # stereo difference (inverted right channel (FFmpeg), out-of-phase stereo (SoX))
-        if ! command -v sox 2>&1 >/dev/null
-        then
-            DM -dpa "Trying Stereo Difference (FFmpeg)..."
-            ffmpeg -hide_banner -loglevel error -i "$1.$2" -filter_complex \
-            "[0:0]pan=1|c0=c0[left]; \
-            [0:0]pan=1|c0=c1[right]" \
-            -map "[left]" left.wav -map "[right]" right.wav
-            ffmpeg -hide_banner -loglevel error -i right.wav -af "aeval='-val(0)':c=same" rightinv.wav
-            ffmpeg -hide_banner -loglevel error -i left.wav -i rightinv.wav -filter_complex amix=inputs=2:duration=longest "cluster_result/$1_stdiff_$RANDOM.wav"
+    # stereo difference (inverted right channel (FFmpeg), out-of-phase stereo (SoX))
+    if ! command -v sox 2>&1 >/dev/null
+    then
+        DM -dpa "Trying Stereo Difference (FFmpeg)..."
+        ffmpeg -hide_banner -loglevel error -i "$1.$2" -filter_complex \
+        "[0:0]pan=1|c0=c0[left]; \
+        [0:0]pan=1|c0=c1[right]" \
+        -map "[left]" left.wav -map "[right]" right.wav
+        ffmpeg -hide_banner -loglevel error -i right.wav -af "aeval='-val(0)':c=same" rightinv.wav
+        ffmpeg -hide_banner -loglevel error -i left.wav -i rightinv.wav -filter_complex amix=inputs=2:duration=longest "cluster_result/$1_stdiff_$RANDOM.wav"
+        if [[ $keepTempFiles -ne 1 ]]; then
             rm left.wav
             rm right.wav
             rm rightinv.wav
-        else
-            DM -dpa "Trying Stereo Difference (SoX)..."
-            ffmpeg -hide_banner -loglevel error -i "$1.$2" ".tempwav.wav" # "sox FAIL formats: no handler for file extension `mp3'"
-            sox ".tempwav.wav" "cluster_result/$1_stdiff_$RANDOM.wav" gain -1 oops
-            rm ".tempwav.wav"
         fi
     else
-        DM -d "Extra Debugging was requested... "
+        DM -dpa "Trying Stereo Difference (SoX)..."
+        ffmpeg -hide_banner -loglevel error -i "$1.$2" ".tempwav.wav" # "sox FAIL formats: no handler for file extension `mp3'"
+        sox ".tempwav.wav" "cluster_result/$1_stdiff_$RANDOM.wav" gain -1 oops
+        if [[ $keepTempFiles -ne 1 ]]; then
+            rm ".tempwav.wav"
+        fi
     fi
 
     # DFPWM, AAC, squash&stretch
@@ -215,9 +216,11 @@ LowQualitize() {
     clrpl
     echo "8x stretch done!"
 
-    rm ".tempwav.wav"
-    rm ".tempstretch.wav"
-    rm ".tempstretch2.wav"
+    if [[ $keepTempFiles -ne 1 ]]; then
+        rm ".tempwav.wav"
+        rm ".tempstretch.wav"
+        rm ".tempstretch2.wav"
+    fi
 
     AtTheEnd
 }
@@ -251,7 +254,9 @@ Visualize() {
     echo "oh yea and sometimes the binary waterfall just stops like halfway through and i dont know how to fix it lmfao"
     # BUG: changing the "42x42" causes the video to freeze randomly unless scaler is set to bicubic for some reason (no known fix)
 
-    rm ".temppcmu8.wav" # clean up tempfile
+    if [[ $keepTempFiles -ne 1 ]]; then
+        rm ".temppcmu8.wav" # clean up tempfile
+    fi
 
     AtTheEnd
 }
@@ -346,6 +351,9 @@ checkAAFC(){
 }
 
 cleanupASingleFuckingTempFileThenExitWhyGodDoINeedAFuctionDedicatedToThis(){
+    if [[ $keepTempFiles -eq 1 ]]; then
+        exit 0
+    fi
     if [[ $directInFile == "1" ]]; then
         DM -dpa "Removing temporary infile..."
         rm "./${infileBaseName}"
@@ -364,6 +372,11 @@ trap cleanupASingleFuckingTempFileThenExitWhyGodDoINeedAFuctionDedicatedToThis I
 
 DM -dpa "if you see this the annoyMe check passed" # debug annoyMe. this also serves as a warning if the user leaves it on.
 if [[ -n "$1" ]]; then
+    if [[ "$1" == "-k" ]]; then
+        DM -dpa "\$1 is -k"
+        keepTempFiles=1
+        MainAsk
+    fi
     if [[ ! -e "$1" ]]; then
         DM -dpa "\$1 was not empty but did not contain a valid file."
         echo "Direct file usage: ./$(basename "$0") <file>"
