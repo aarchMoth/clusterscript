@@ -9,4 +9,4 @@ SSDPCM (optional, 1-bit SSDPCM)
 
 # CONTRIBUTING:
 Feel free to add or modify whatever you want via a pull request!  
-However this does not guarantee that your pull request will be merged.
+However, this does not guarantee that your pull request will be merged.
