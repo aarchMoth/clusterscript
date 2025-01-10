@@ -8,5 +8,5 @@ AAFC (optional, 3-bit 4096Hz PCM and 8192Hz DPCM)
 SSDPCM (optional, 1-bit SSDPCM)  
 
 # CONTRIBUTING:
-feel free to add or modify whatever you want via a pull request!  
-however this does not guarantee that your pull request will be merged.
+Feel free to add or modify whatever you want via a pull request!  
+However this does not guarantee that your pull request will be merged.
