@@ -55,10 +55,15 @@ thatFancyEffect(){
 }
 
 credits(){
+    random=$RANDOM
     clear
     eepyTimeShort="0.5"
     eepyTimeLong="2"
-    sndplay credits
+    if [[ $random -le 1000 ]]; then
+        sndplay creditsnes
+    else
+        sndplay credits
+    fi
     echo "[CREDITS]" && echo ""
     sleep $eepyTimeLong
     echo "Creator:"
@@ -70,6 +75,10 @@ credits(){
     thatFancyEffect "$whoAmI"
     sleep $eepyTimeShort
     thatFancyEffectTwo "Architect" && echo ""
+    sleep $eepyTimeLong
+    echo "Music (Credits):"
+    sleep $eepyTimeShort
+    thatFancyEffect "$whoAmI" && echo ""
     sleep $eepyTimeLong
     echo "Special Thanks:"
     sleep $eepyTimeLong
