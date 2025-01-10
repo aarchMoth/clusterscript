@@ -1,9 +1,10 @@
 #!/bin/bash
 
 #      -+- ClusterScript -+-
-#  -+- Rev. 5.1_LINPRERELEASE -+-
+#  -+- Rev. 6.0_LINPRERELEASE -+-
 
 # these need to be at the top for Reasons
+whoAmI="aarchMoth"
 aafcworks=1 # manual flag so i only have to change 1 character to disable AAFC when it breaks
 debl='\033[0;34m' # DEbug BLue
 der='\033[0;31m' # DEbug Red
@@ -35,9 +36,104 @@ DM(){ # Debug Message
     esac
 }
 
+thatFancyEffectTwo(){
+    one=$1
+    echo ""
+    for ((i=1;i<=${#1};i++)); do
+        clrple "${one:(-$i):$i}"
+        sleep 0.05
+    done
+}
+
+thatFancyEffect(){
+    one=$1
+    echo ""
+    for ((i=1;i<=${#1};i++)); do
+        clrple "${one:0:$i}"
+        sleep 0.05
+    done
+}
+
+credits(){
+    clear
+    eepyTimeShort="0.5"
+    eepyTimeLong="2"
+    sndplay credits
+    echo "[CREDITS]" && echo ""
+    sleep $eepyTimeLong
+    echo "Creator:"
+    sleep $eepyTimeShort
+    thatFancyEffect "$whoAmI" && echo ""
+    sleep $eepyTimeLong
+    echo "Contributors:"
+    sleep $eepyTimeShort
+    thatFancyEffect "$whoAmI"
+    sleep $eepyTimeShort
+    thatFancyEffectTwo "Architect" && echo ""
+    sleep $eepyTimeLong
+    echo "Special Thanks:"
+    sleep $eepyTimeLong
+    thatFancyEffect "subG/ashley"
+    sleep $eepyTimeShort
+    thatFancyEffectTwo "EntropyAuthor"
+    sleep $eepyTimeShort
+    thatFancyEffect "StackOverflow"
+    sleep $eepyTimeShort
+    thatFancyEffectTwo "www.devhints.io"
+    sleep $eepyTimeShort
+    echo ""
+    echo "and finally..."
+    sleep 0.2
+    for i in {1..10}; do
+        clrple "" && sleep 0.05
+        clrple "and finally..."
+        sleep 0.05
+    done
+    sleep $eepyTimeLong
+    echo ""
+    thatFancyEffect "Thank"
+    sleep 0.3
+    clrple "Thank Y" && sleep 0.2
+    clrple "Thank YO" && sleep 0.2
+    clrple "Thank YOU" && sleep 0.2
+    clrple "Thank YOU!"
+    sleep $eepyTimeLong
+    echo ""
+    read -p "Press any key at any time to go back to the menu... " -n 1 -r
+    echo ""
+    pkill play
+    MainAskExtended
+}
+
+notify(){ # notify with format: (appname hard-coded) [title] [body] <notification sound>
+    notify-send -a ClusterScript "$1" "$2"
+    if [[ -n $3 && $nosound -ne 1 ]]; then
+        if ! command -v sox 2>&1 >/dev/null; then
+            ffplay -hide_banner -loglevel error -i "cluster_sound/${3}.wav" -autoexit -nodisp &
+        else
+            play -q "cluster_sound/${3}.wav" &
+        fi
+    fi
+}
+
+sndplay(){
+    if [[ $nosound -eq 1 ]]; then return; fi
+    if ! command -v sox 2>&1 >/dev/null; then
+        ffplay -hide_banner -loglevel error -i "cluster_sound/${1}.wav" -autoexit -nodisp &
+    else
+        play -q "cluster_sound/${1}.wav" &
+    fi
+}
+
 clrpl(){ # CLeaR Previous Line
     tput cuu1
     tput el
+}
+
+clrple(){ # CLeaR Previous Line (with Echo)
+    tput cuu1
+    tput el
+    echo "$1"
 }
 
 AtTheEnd() { # we finished the function!
@@ -45,6 +141,7 @@ AtTheEnd() { # we finished the function!
         DM -dpa "Removing temporary infile..."
         rm "./${infileBaseName}"
     fi
+    notify "Conversion complete" "Conversion completed with hopefully no errors." convcomplete
     read -p "Do you want to convert another file? (Y/N) " -n 1 -r
     echo    # (optional) move to a new line
     if [[ $REPLY =~ ^[Yy]$ ]]
@@ -56,6 +153,11 @@ AtTheEnd() { # we finished the function!
 }
 
 LowQualitize() {
+    if [[ $noInFIle -eq 1 ]]; then
+        echo "You have not provided a file!"
+        MainAskExtended
+    fi
+    eepyTime="0.4"
     # the first ClusterScript function ever.
     if [[ -e cluster_result ]]; then
         DM -dpa "directory cluster_result already exists."
@@ -65,46 +167,64 @@ LowQualitize() {
     sleep 0.5
     # the initial 5
     DM -dpa "Trying OPUS..."
-    if [[ $nopus == 1 ]]; then
-        echo "NoOPUS has been enabled, skipping OPUS..."
-    else
-        DM -dpa "NoOPUS is disabled... "
-        ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a libopus -b:a 1k "cluster_result/$1_1kbopus_$RANDOM.ogg"
-        ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a libopus -b:a 1k "cluster_result/$1_1kbopus_$RANDOM.opus"
-        ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a libopus -b:a 8k "cluster_result/$1_8kbopus_$RANDOM.ogg"
-        ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a libopus -b:a 8k "cluster_result/$1_8kbopus_$RANDOM.opus"
-    fi
+    DM -dpa "NoOPUS is disabled... "
+    echo "Opus: [...]"
+    sleep "$eepyTime"
+    clrple "Opus: 1kbopus (.ogg)"
+    ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a libopus -b:a 1k "cluster_result/$1_1kbopus_$RANDOM.ogg"
+    clrpl
+    echo "Opus: 1kbopus (.opus)"
+    ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a libopus -b:a 1k "cluster_result/$1_1kbopus_$RANDOM.opus"
+    clrple "Opus: 8kbopus (.ogg)"
+    ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a libopus -b:a 8k "cluster_result/$1_8kbopus_$RANDOM.ogg"
+    clrple "Opus: 8kbopus (.opus)"
+    ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a libopus -b:a 8k "cluster_result/$1_8kbopus_$RANDOM.opus"
+    clrple "Opus: Complete"
     DM -dpa "Trying MP3..."
+    echo "MP3: [...]"
+    sleep "$eepyTime"
+    clrple "MP3: 8kbmp3"
     ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -b:a 8k -ar 8000 "cluster_result/$1_8kbmp3_$RANDOM.mp3"
+    clrple "MP3: Complete"
     DM -dpa "Trying SPEEX..."
-    if [[ $nospeex == 1 ]]; then
-        echo "NoSPEEX has been enabled, skipping SPEEX..."
-    else
-        ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -ar 8000 -b:a 1k -acodec libspeex "cluster_result/$1_1kbspeex_$RANDOM.ogg"
-        ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -ar 8000 -b:a 8k -acodec libspeex "cluster_result/$1_8kbspeex_$RANDOM.ogg"
-    fi
+    echo "SPEEX: [...]"
+    sleep "$eepyTime"
+    clrple "SPEEX: 1kbspeex"
+    ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -ar 8000 -b:a 1k -acodec libspeex "cluster_result/$1_1kbspeex_$RANDOM.ogg"
+    clrple "SPEEX: 8kbspeex"
+    ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -ar 8000 -b:a 8k -acodec libspeex "cluster_result/$1_8kbspeex_$RANDOM.ogg"
+    clrple "SPEEX: Complete"
 
     # 3 bit depth 4096hz and dpcm8192
     DM -dpa "Trying AAFC..."
     if [[ $noaafc == 1 ]]; then
         echo "NoAAFC has been enabled, skipping AAFC functions... "
     elif [[ $aafcworks == 1 ]]; then # this saves me manually commenting out every line of this when AAFC breaks and i want to use this darn thing
+        echo "AAFC: [...]"
         DM -d "entering into AAFC territory..."
-        cd "cluster_AAFC"
+        cd "cluster_AAFC" || return
         DM -d "Changed directory to cluster_AAFC."
+        sleep "$eepyTime"
+        clrple "FFmpeg: generating AAFC input"
         ffmpeg -hide_banner -loglevel error -y -i "../$1.$2" "../$1_tmp.wav"
         DM -d "Trying to convert to 3 bit depth 4096Hz..."
-        ./aud2aafc -i "../$1_tmp.wav" --bps 3 -ar 4096 # aafc pass 1
+        clrple "AAFC: 3-bit 4096Hz"
+        ./aud2aafc -i "../$1_tmp.wav" --bps 3 -ar 4096 > /dev/null # aafc pass 1
         DM -d "converting to WAV..."
-        ./aafc2wav "aafc_conversions/$1_tmp.aafc" "../cluster_result/$1_3bitdepth4096hz_$RANDOM"
+        clrple "AAFC: converting to WAV..."
+        ./aafc2wav "aafc_conversions/$1_tmp.aafc" "../cluster_result/$1_3bitdepth4096hz_$RANDOM" > /dev/null
         DM -d "Trying to convert to DPCM8192..."
-        ./aud2aafc -i "../$1_tmp.wav" -n -m --dpcm -ar 8192 # aafc pass 2, OVERWRITE DISTHINGKFXLKZJ
+        clrple "AAFC: dpcm8192"
+        ./aud2aafc -i "../$1_tmp.wav" -n -m --dpcm -ar 8192 > /dev/null # aafc pass 2, OVERWRITE DISTHINGKFXLKZJ
         DM -d "converting to WAV..."
-        ./aafc2wav "aafc_conversions/$1_tmp.aafc" "../cluster_result/$1_dpcm8192hz_$RANDOM"
+        clrple "AAFC: converting to WAV..."
+        ./aafc2wav "aafc_conversions/$1_tmp.aafc" "../cluster_result/$1_dpcm8192hz_$RANDOM" > /dev/null
         DM -d "Removing tempfiles..."
         if [[ $keepTempFiles -ne 1 ]]; then
+            clrple "bash: remove temporary files"
             rm "aafc_conversions/$1_tmp.aafc" "../$1_tmp.wav"
         fi
+        clrple "AAFC: Complete"
         cd ..
     elif [[ $aafcworks == 0 ]]; then
         echo "AAFC support is currently broken, skipping..."
@@ -112,121 +232,146 @@ LowQualitize() {
 
     # CODify
     DM -dpa "Trying CODify..."
-    if [[ $nopus == 1 ]] || [[ $nospeex == 1 ]]; then
-        echo "NoSPEEX and/or NoOPUS has been enabled, skipping CODify..."
-    else
-        ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -ar 8000 -b:a 1k -acodec libspeex "TEMPSPEEX_$1.$2.ogg" # encode to speex for Effect(tm)
-        ffmpeg -hide_banner -loglevel error -y -i "TEMPSPEEX_$1.$2.ogg" -c:a libopus -b:a 1k "TEMPOPUS_$1.$2.ogg" # encode that speex with OPUS
-        ffmpeg -hide_banner -loglevel error -y -i "TEMPOPUS_$1.$2.ogg" -filter:a "volume = 35dB" "TEMPLOUD_$1.$2.wav" # make it loud for that COD Quality(tm)
-        ffmpeg -hide_banner -loglevel error -y -i "TEMPLOUD_$1.$2.wav"  -c:a libopus -b:a 1k "cluster_result/$1_codlobby_$RANDOM.ogg" # encode it with opus again for that Extra Quality(tm)
-        if [[ $keepTempFiles -ne 1 ]]; then
-            rm "TEMPOPUS_$1.$2.ogg"
-            rm "TEMPSPEEX_$1.$2.ogg"
-            rm "TEMPLOUD_$1.$2.wav"
-        fi
+    echo "CODify: [...]"
+    sleep "$eepyTime"
+    clrple "CODify: generate temporary SPEEX"
+    ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -ar 8000 -b:a 1k -acodec libspeex "TEMPSPEEX_$1.$2.ogg" # encode to speex for Effect(tm)
+    clrple "CODify: encode with Opus"
+    ffmpeg -hide_banner -loglevel error -y -i "TEMPSPEEX_$1.$2.ogg" -c:a libopus -b:a 1k "TEMPOPUS_$1.$2.ogg" # encode that speex with OPUS
+    clrple "CODify: make loud"
+    ffmpeg -hide_banner -loglevel error -y -i "TEMPOPUS_$1.$2.ogg" -filter:a "volume = 35dB" "TEMPLOUD_$1.$2.wav" # make it loud for that COD Quality(tm)
+    clrple "CODify: encode with Opus"
+    ffmpeg -hide_banner -loglevel error -y -i "TEMPLOUD_$1.$2.wav"  -c:a libopus -b:a 1k "cluster_result/$1_codlobby_$RANDOM.ogg" # encode it with opus again for that Extra Quality(tm)
+    if [[ $keepTempFiles -ne 1 ]]; then
+        clrple "bash: remove temporary files"
+        rm "TEMPOPUS_$1.$2.ogg"
+        rm "TEMPSPEEX_$1.$2.ogg"
+        rm "TEMPLOUD_$1.$2.wav"
     fi
+    clrple "CODify: Complete"
 
     # SSDPCM
     DM -dpa "Trying SSDPCM..."
     if [[ $nossdpcm == 1 ]]; then
         echo "NoSSDPCM has been enabled, skipping SSDPCM... "
     else
+        echo "SSDPCM: [...]"
+        sleep "$eepyTime"
+        clrple "FFmpeg: generating SSDPCM input"
         ffmpeg -hide_banner -loglevel error -i "$1.$2" -ar 11025 "$1_temp11025hz.wav" # take the input and convert it to 11025Hz WAV temporarily
-        ./cluster_SSDPCM/encoder ss1 "$1_temp11025hz.wav" "$1_tempssdpcm.aud" # convert the 11025Hz WAV to 1-bit SSDPCM
-        ./cluster_SSDPCM/encoder decode "$1_tempssdpcm.aud" "cluster_result/$1_1bssdpcm11025_$RANDOM.wav" # convert the 1-bit SSDPCM back to WAV
+        clrple "SSDPCM: encode"
+        ./cluster_SSDPCM/encoder ss1 "$1_temp11025hz.wav" "$1_tempssdpcm.aud" > /dev/null 2>&1 # convert the 11025Hz WAV to 1-bit SSDPCM
+        clrple "SSDPCM: decode"
+        ./cluster_SSDPCM/encoder decode "$1_tempssdpcm.aud" "cluster_result/$1_1bssdpcm11025_$RANDOM.wav" > /dev/null 2>&1 # convert the 1-bit SSDPCM back to WAV
         if [[ $keepTempFiles -ne 1 ]]; then
+            #clrple "bash: remove temporary files" # (have no idea why but this fails to be cleared)
             rm "$1_temp11025hz.wav" # remove the temporary 11025Hz WAV
             rm "$1_tempssdpcm.aud" # remove the temporary 1-bit SSDPCM
         fi
+        clrple "SSDPCM: Complete"
     fi
 
     # stereo difference (inverted right channel (FFmpeg), out-of-phase stereo (SoX))
+    echo "Stereo Difference: [...]"
     if ! command -v sox 2>&1 >/dev/null
     then
         DM -dpa "Trying Stereo Difference (FFmpeg)..."
+        clrple "Stereo Difference (FFmpeg): split audio channels"
         ffmpeg -hide_banner -loglevel error -i "$1.$2" -filter_complex \
         "[0:0]pan=1|c0=c0[left]; \
         [0:0]pan=1|c0=c1[right]" \
         -map "[left]" left.wav -map "[right]" right.wav
+        clrple "Stereo Difference (FFmpeg): invert right channel"
         ffmpeg -hide_banner -loglevel error -i right.wav -af "aeval='-val(0)':c=same" rightinv.wav
+        clrple "Stereo Difference (FFmpeg): mix channels"
         ffmpeg -hide_banner -loglevel error -i left.wav -i rightinv.wav -filter_complex amix=inputs=2:duration=longest "cluster_result/$1_stdiff_$RANDOM.wav"
         if [[ $keepTempFiles -ne 1 ]]; then
+            clrple "bash: remove temporary files"
             rm left.wav
             rm right.wav
             rm rightinv.wav
         fi
+        clrple "Stereo Difference (FFmpeg): Complete"
     else
         DM -dpa "Trying Stereo Difference (SoX)..."
+        clrple "FFmpeg: generating SoX input"
         ffmpeg -hide_banner -loglevel error -i "$1.$2" ".tempwav.wav" # "sox FAIL formats: no handler for file extension `mp3'"
+        clrple "Stereo Difference (SoX): run \"oops\" pass"
         sox ".tempwav.wav" "cluster_result/$1_stdiff_$RANDOM.wav" gain -1 oops
         if [[ $keepTempFiles -ne 1 ]]; then
+            clrple "bash: remove temporary files"
             rm ".tempwav.wav"
         fi
+        clrple "Stereo Difference (SoX): Complete"
     fi
 
     # DFPWM, AAC, squash&stretch
     DM -dpa "Trying DFPWM..."
+    echo "DFPWM: [...]"
+    sleep "$eepyTime"
+    clrple "DFPWM: encode"
     ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a dfpwm -ar 11025 ".tempwav.wav"
+    clrple "DFPWM: decode"
     ffmpeg -hide_banner -loglevel error -y -i ".tempwav.wav" -ar 44100 "cluster_result/$1_11025hzdfpwm_$RANDOM.wav"
+    clrple "DFPWM: Complete"
 
     DM -dpa "Trying AAC..."
+    echo "AAC: [...]"
+    sleep "$eepyTime"
+    clrple "AAC: encode"
     ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a aac -b:a 16k -filter:a "volume=0.5" "cluster_result/$1_16kbaac_$RANDOM.aac" # low quality AAC tends to be loud, decrease volume by 2x to avoid clipping and bursting eardrums
+    clrple "AAC: Complete"
 
     DM -dpa "Trying Stretch..."
 
-    echo "2x: [                ] (0%)"
+    echo "Stretch 2x: [                ] (0%)"
     sleep 0.3
-    clrpl
-    echo "2x: [========        ] (50%)"
+    clrple "Stretch 2x: [========        ] (50%)"
     ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -af "atempo=2" ".tempstretch.wav" # 2x
-    clrpl
-    echo "2x: [================] (100%)"
+    clrple "Stretch 2x: [================] (100%)"
     ffmpeg -hide_banner -loglevel error -y -i ".tempstretch.wav" -af "atempo=0.5" "cluster_result/$1_stretch_2x_$RANDOM.wav" # 1x
-    clrpl
-    echo "2x stretch done!"
+    clrple "2x stretch done!"
 
-    echo "4x: [                ] (0%)"
+    echo "Stretch 4x: [                ] (0%)"
     sleep 0.3
-    clrpl
-    echo "4x: [======          ] (34%)"
+    clrple "Stretch 4x: [======          ] (34%)"
     ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -af "atempo=4" ".tempstretch.wav" # 4x
-    clrpl
-    echo "4x: [==========      ] (67%)"
+    clrple "Stretch 4x: [==========      ] (67%)"
     ffmpeg -hide_banner -loglevel error -y -i ".tempstretch.wav" -af "atempo=0.5" ".tempstretch2.wav" # 2x
-    clrpl
-    echo "4x: [================] (100%)"
+    clrple "Stretch 4x: [================] (100%)"
     ffmpeg -hide_banner -loglevel error -y -i ".tempstretch2.wav" -af "atempo=0.5" "cluster_result/$1_stretch_4x_$RANDOM.wav" # 1x
-    clrpl
-    echo "4x stretch done!"
+    clrple "4x stretch done!"
 
-    echo "8x: [                ] (0%)"
+    echo "Stretch 8x: [                ] (0%)"
     sleep 0.3
-    clrpl
-    echo "8x: [====            ] (25%)"
+    clrple "Stretch 8x: [====            ] (25%)"
     ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -af "atempo=8" ".tempstretch.wav" # 8x
-    clrpl
-    echo "8x: [========        ] (50%)"
+    clrple "Stretch 8x: [========        ] (50%)"
     ffmpeg -hide_banner -loglevel error -y -i ".tempstretch.wav" -af "atempo=0.5" ".tempstretch2.wav" # 4x
-    clrpl
-    echo "8x: [============    ] (75%)"
+    clrple "Stretch 8x: [============    ] (75%)"
     ffmpeg -hide_banner -loglevel error -y -i ".tempstretch2.wav" -af "atempo=0.5" ".tempstretch.wav" # 2x
-    clrpl
-    echo "8x: [================] (100%)"
+    clrple "Stretch 8x: [================] (100%)"
     ffmpeg -hide_banner -loglevel error -y -i ".tempstretch.wav" -af "atempo=0.5" "cluster_result/$1_stretch_8x_$RANDOM.wav" # 1x
-    clrpl
-    echo "8x stretch done!"
 
     if [[ $keepTempFiles -ne 1 ]]; then
+        clrple "bash: remove temporary files"
         rm ".tempwav.wav"
         rm ".tempstretch.wav"
         rm ".tempstretch2.wav"
     fi
+
+    clrple "8x stretch done!"
 
     AtTheEnd
 }
 
 Visualize() {
     # the newest function in the current iteration. designed to be modular.
+
+    if [[ $noInFIle -eq 1 ]]; then
+        echo "You have not provided a file!"
+        MainAskExtended
+    fi
 
     echo "This may take a long time!"
 
@@ -261,14 +406,51 @@ Visualize() {
     AtTheEnd
 }
 
+LowQualitizeVideo(){
+
+    eepyTime="0.4"
+
+    if [[ $RANDOM == "3000" ]]; then # originally a placeholder but made me laugh my ass off
+        echo "Place. Hold. erv.;s,;dm nnnajklv;smrnkkkahkcv"
+    elif [[ $RANDOM == "20" ]]; then # aRchitcte
+        echo "holdis palic of holderplace"
+    fi
+
+    if [[ $noInFIle -eq 1 ]]; then # standard CYA code
+        echo "You have not provided a file!"
+        MainAskExtended
+    fi
+
+    echo "Video: [...]"
+    sleep $eepyTime
+    clrple "Video: 80k, AAC"
+    ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:v libx264 -b:v 80k -c:a aac -b:a 16k "cluster_result/$1_80kbx264aac_${RANDOM}.mp4"
+    clrple "Video: 50k, AAC"
+    ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:v libx264 -b:v 50k -c:a aac -b:a 16k "cluster_result/$1_50kbx264aac_${RANDOM}.mp4"
+    clrple "Video: 30k, AAC"
+    ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:v libx264 -b:v 30k -c:a aac -b:a 16k "cluster_result/$1_30kbx264aac_${RANDOM}.mp4"
+    clrple "Video: 80k, Opus"
+    ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:v libx264 -b:v 80k -c:a libopus -b:a 1k "cluster_result/$1_80kbx264opus_${RANDOM}.mp4"
+    clrple "Video: 50k, Opus"
+    ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:v libx264 -b:v 50k -c:a libopus -b:a 1k "cluster_result/$1_50kbx264opus_${RANDOM}.mp4"
+    clrple "Video: 30k, Opus"
+    ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:v libx264 -b:v 30k -c:a libopus -b:a 1k "cluster_result/$1_30kbx264opus_${RANDOM}.mp4"
+    clrple "Video: Complete"
+
+    AtTheEnd
+
+}
+
 MainAsk() {
     # ask for the file
-    read -e -p "Type the name of the file: " file
+    read -r -e -p "Type the name of the file: " file
     infile="${file%.*}" # credit to Architect for these lines
     extension="${file##*.}" # credit to Architect for these lines
     if [[ -e "$infile.$extension" ]]; then # check if the file actually exists
+        sndplay startmenu
         MainAskExtended
     else
+        sndplay error
         echo "File does not exist. Please try again." # fun fact: we did not have this check until semi-recently
         MainAsk
     fi
@@ -276,34 +458,47 @@ MainAsk() {
 
 MainAskExtended(){
     # functions menu
-    echo "Select a function (or press F to disable certain features if you do not have them):"
-    echo "LowQualitize (1), Visualize (2)"
+    if [[ $extension == "mp4" || $extension == "webm" ]]; then
+        one="Video LowQualitize"
+    else
+        one="Visualize"
+    fi
+    echo "Select a function:"
+    echo "LowQualitize (1), $one (2)"
     read -p "" -n 1 -r
     echo    # (optional) move to a new line
     if [[ $REPLY == "1" ]]; then
         LowQualitize "$infile" "$extension"
     elif [[ $REPLY == "2" ]]; then
-        Visualize "$infile" "$extension"
-    elif [[ $REPLY =~ ^[Ff]$ ]]; then
-        TheOnlyReasonINeedThisMenuIsBecauseICompiledMyFuckingFFmpegWrongAndLeftOutOverHalfOfIt
+        if [[ $one == "Video LowQualitize" ]]; then
+            LowQualitizeVideo "$infile" "$extension"
+        else
+            Visualize "$infile" "$extension"
+        fi
+    elif [[ $REPLY =~ ^[Cc]$ ]]; then
+        credits
     fi
 }
 
-TheOnlyReasonINeedThisMenuIsBecauseICompiledMyFuckingFFmpegWrongAndLeftOutOverHalfOfIt(){ # self-explanatory function name, and only takes up half my screen space!
-    echo "Welcome to the menu to disable features. Select a feature or press N to go back to the main menu. "
-    echo "Disable SPEEX (1), Disable OPUS (2) "
-    read -p "" -n 1 -r
-    echo    # (optional) move to a new line
-    if [[ $REPLY == "1" ]]; then
-        nospeex=1
-    elif [[ $REPLY == "2" ]]; then
-        nopus=1
-    elif [[ $REPLY == "3" ]]; then
-        noaafc=1
-    elif [[ $REPLY =~ ^[Nn]$ ]]; then
-        MainAskExtended
+checkSND(){
+    if [[ -e ./cluster_sound ]]; then # if folder exists, then
+        DM -d "SND folder check passed."
+        if [[ $directInFile == "1" ]]; then
+            MainAskExtended
+        else
+            sndplay startprompt
+            MainAsk
+        fi
+    else
+        echo "Sound folder does not exist, disabling sound..."
+        nosound=1
+        if [[ $directInFile == "1" ]]; then
+            MainAskExtended
+        else
+            sndplay startprompt
+            MainAsk
+        fi
     fi
-    TheOnlyReasonINeedThisMenuIsBecauseICompiledMyFuckingFFmpegWrongAndLeftOutOverHalfOfIt
 }
 
 checkSSDPCM(){
@@ -311,24 +506,17 @@ checkSSDPCM(){
     DM -d "SSDPCM folder check passed. "
         if [[ -e ./cluster_SSDPCM/encoder ]]; then # if the SSDPCM encoder file exists, then:
             DM -d "SSDPCM encoder check passed. "
-            if [[ $directInFile == "1" ]]; then
-                MainAskExtended
-            else
-                MainAsk
-            fi
+            checkSND
         else # SSDPCM encoder does not exist
             echo "SSDPCM encoder does not exist, disabling SSDPCM... "
             nossdpcm=1
+            checkSND
         fi
     else # SSDPCM folder does not exist
         echo "SSDPCM folder does not exist! Create the folder \"cluster_SSDPCM\" and put the required SSDPCM files into it!"
         echo "Disabling SSDPCM..."
         nossdpcm=1
-        if [[ $directInFile == "1" ]]; then
-            MainAskExtended
-        else
-            MainAsk
-        fi
+        checkSND
     fi
 }
 
@@ -363,8 +551,8 @@ cleanupASingleFuckingTempFileThenExitWhyGodDoINeedAFuctionDedicatedToThis(){
     fi
 }
 
-debugmessages=1 # manual flag to enable debug messages
-annoyMe=1 # enable this if you love annoying debug messages
+debugmessages=0 # manual flag to enable debug messages
+annoyMe=0 # enable this if you love annoying debug messages
 getUnixTimestamp(){ # get the current unix timestamp.
     date +%s
 }
@@ -376,6 +564,9 @@ if [[ -n "$1" ]]; then
         DM -dpa "\$1 is -k"
         keepTempFiles=1
         MainAsk
+    elif [[ "$1" == "-m" ]]; then
+    noInFIle=1
+    MainAskExtended
     fi
     if [[ ! -e "$1" ]]; then
         DM -dpa "\$1 was not empty but did not contain a valid file."
@@ -399,6 +590,9 @@ if [[ -n "$1" ]]; then
     DM -d "\$infileTMP is $infileTMP"
     DM -d "\$infile is $infile"
     DM -d "\$extension is $extension"
+    if [[ -e ./cluster_sound ]]; then
+        sndplay startdirect
+    fi
     checkAAFC
 fi
 checkAAFC
