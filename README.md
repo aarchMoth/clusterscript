@@ -1,5 +1,5 @@
 # The ClusterScript
-Audio obliteration and visualization tool, written in Bash!  
+Audio/Video obliteration tool, written in Bash!  
 
 # DEPENDENCIES:
 FFmpeg (required)  
