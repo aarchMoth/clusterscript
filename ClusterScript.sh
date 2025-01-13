@@ -563,7 +563,7 @@ MainAsk() {
     read -r -e -p "Type the name of the file: " file
     infile="${file%.*}" # credit to Architect for these lines
     extension="${file##*.}" # credit to Architect for these lines
-    if [[ -e "$infile.$extension" ]]; then # check if the file actually exists
+    if [[ -e "$infile.$extension" && -n $file && ! -d $file ]]; then # check if the file actually exists
         sndplay startmenu
         MainAskExtended
     else
