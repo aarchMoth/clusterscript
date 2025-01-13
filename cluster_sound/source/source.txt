@@ -1,1 +1,2 @@
-this is the source module for the sounds. requires Furnace.
+this is the source module for the sounds. requires Furnace and LMMS.
+Architect's is unavailable because of **ABLETON**
