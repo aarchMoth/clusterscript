@@ -259,9 +259,9 @@ LowQualitize() {
             clrple "AAFC: Already generated"
         else
             clrple "AAFC: DPCM8192 already generated"
-            if [[ $keepTempFiles -ne 1 ]]; then
-                rm "aafc_conversions/$1_tmp.aafc" "../$1_tmp.wav"
-            fi
+        fi
+        if [[ $keepTempFiles -ne 1 ]]; then
+            rm "aafc_conversions/$1_tmp.aafc" "../$1_tmp.wav"
         fi
         cd ..
     fi
