@@ -76,9 +76,11 @@ credits(){
     sleep $eepyTimeShort
     thatFancyEffectTwo "EntropyAuthor"
     sleep $eepyTimeShort
-    thatFancyEffect "StackOverflow"
+    thatFancyEffect "Blue_595"
     sleep $eepyTimeShort
-    thatFancyEffectTwo "www.devhints.io"
+    thatFancyEffectTwo "StackOverflow"
+    sleep $eepyTimeShort
+    thatFancyEffect "www.devhints.io"
     sleep $eepyTimeShort
     echo ""
     echo "and finally..."
@@ -353,7 +355,7 @@ LowQualitize() {
         clrple "DFPWM: encode"
         ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a dfpwm -ar 11025 ".tempwav.wav"
         clrple "DFPWM: decode"
-        ffmpeg -hide_banner -loglevel error -y -i ".tempwav.wav" -ar 44100 "cluster_result/$1_11025hzdfpwm_$RANDOM.wav"
+        ffmpeg -hide_banner -loglevel error -y -i ".tempwav.wav" -af aresample=resampler=swr:filter_size=1:phase_shift=0:linear_interp=0 -ar 44100 -c:a pcm_s16le "cluster_result/$1_11025hzdfpwm_$RANDOM.wav"
         clrple "DFPWM: Complete"
     else
         clrple "DFPWM: Already generated"
@@ -428,13 +430,53 @@ LowQualitize() {
         clrple "GSM: encode"
         ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a libgsm -ar 8000 ".tempgsm.gsm"
         clrple "GSM: decode"
-        ffmpeg -hide_banner -loglevel error -y -i ".tempgsm.gsm" -c:a pcm_s16le -ar 44100 "cluster_result/$1_gsm_$RANDOM.wav"
-        clrple "GSM: Complete!"
+        ffmpeg -hide_banner -loglevel error -y -i ".tempgsm.gsm" -c:a pcm_s16le -af aresample=resampler=swr:filter_size=1:phase_shift=0:linear_interp=0 -ar 44100 "cluster_result/$1_gsm_$RANDOM.wav"
+        clrple "GSM: Complete"
         if [[ $keepTempFiles -ne 1 ]]; then
             rm ".tempgsm.gsm"
         fi
     else
         clrple "GSM: Already generated"
+    fi
+
+    echo "SBC: [...]"
+    sleep $eepyTime
+    if [[ -z $(find cluster_result -name "$1_sbc*") ]]; then
+        clrple "SBC: encode"
+        ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a sbc -b:a 64k ".tempsbc.sbc"
+        clrple "SBC: decode"
+        ffmpeg -hide_banner -loglevel error -y -i ".tempsbc.sbc" -c:a pcm_s16le -af aresample=resampler=swr:filter_size=1:phase_shift=0:linear_interp=0 -ar 48000 "cluster_result/$1_sbc_$RANDOM.wav"
+        clrple "SBC: Complete"
+        if [[ $keepTempFiles -ne 1 ]]; then
+            rm ".tempsbc.sbc"
+        fi
+    else
+        clrple "SBC: Already generated"
+    fi
+
+    if [[ -z $(find cluster_result -name "$1_amr*") ]]; then
+        echo "AMR: [...]"
+        sleep $eepyTime
+        clrple "AMR: encode"
+        ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a libopencore_amrnb -ar 8000 -ac 1 ".tempamr.amr"
+        clrple "AMR: decode"
+        ffmpeg -hide_banner -loglevel error -y -i ".tempamr.amr" -c:a pcm_s16le -af aresample=resampler=swr:filter_size=1:phase_shift=0:linear_interp=0 -ar 48000 "cluster_result/$1_amr_$RANDOM.wav"
+        clrple "AMR: Complete"
+        if [[ $keepTempFiles -ne 1 ]]; then
+            rm ".tempamr.amr"
+        fi
+    else
+        clrple "AMR: Already generated"
+    fi
+
+    if [[ -z $(find cluster_result -name "$1_16kvorbis*") ]]; then
+        echo "Vorbis: [...]"
+        sleep $eepyTime
+        clrple "Vorbis: encode"
+        ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a libvorbis -b:a 16k -ar 8000 "cluster_result/$1_16kvorbis_$RANDOM.ogg"
+        clrple "Vorbis: Complete"
+    else
+        clrple "Vorbis: Already generated"
     fi
 
     AtTheEnd
@@ -695,7 +737,8 @@ if [[ -n "$1" ]]; then
     fi
     directInFile="1"
     _infile=${onetwo##*/}
-    if [[ -e "./${onetwo}" ]]; then
+    echo $onetwo
+    if [[ -e "./${onetwo##*/}" ]]; then
         echo "A file with that name already exists in current directory, use that instead? (Y/N)"
         read -p "" -n 1 -r
         echo    # (optional) move to a new line
