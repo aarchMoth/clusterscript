@@ -25,15 +25,22 @@ thatFancyEffect(){
     done
 }
 
-credits(){
-    random=$RANDOM
-    clear
-    eepyTimeShort="0.5"
-    eepyTimeLong="2"
-    if [[ $random -lt 4000 ]]; then
+decideCreditsMusic(){
+    if [[ $RANDOM -lt 4000 ]]; then
         if [[ $RANDOM -le 9000 ]]; then
-            echo "Playing: Credits (2A03 + VRC6, $whoAmI)"
-            sndplay creditsnes -l
+            if [[ $RANDOM -le 13000 ]]; then
+                if [[ $RANDOM -le 777 ]]; then
+                    echo "you are one lucky bitch"
+                    echo "Playing: Credits (secret PV-1000 version, $whoAmI)"
+                    sndplay creditspv1000 -l
+                else
+                    echo "Playing: Credits (VIC-20, $whoAmI)"
+                    sndplay creditsvic -l
+                fi
+            else
+                echo "Playing: Credits (2A03 + VRC6, $whoAmI)"
+                sndplay creditsnes -l
+            fi
         else
             echo "Playing: Credits (OPL2, $whoAmI)"
             sndplay creditsopl2 -l
@@ -47,6 +54,13 @@ credits(){
             sndplay creditspcarchitect -l
         fi
     fi
+}
+
+credits(){
+    clear
+    eepyTimeShort="0.5"
+    eepyTimeLong="2"
+    decideCreditsMusic
     echo "[CREDITS]" && echo ""
     sleep $eepyTimeLong
     echo "Creator:"
@@ -61,7 +75,7 @@ credits(){
     sleep $eepyTimeLong
     echo "Music (Credits):"
     sleep $eepyTimeShort
-    thatFancyEffect "$whoAmI (OPL2, 2A03 + VRC6, PC v1)"
+    thatFancyEffect "$whoAmI (OPL2, 2A03 + VRC6, PC v1, VIC-20)"
     thatFancyEffectTwo "Architect (PC v2)" && echo ""
     sleep $eepyTimeLong
     echo "Sounds:"
@@ -720,7 +734,7 @@ if [[ -n "$1" ]]; then
     elif [[ "$1" == "-h" ]]; then
         echo "ClusterScript, the audiovisual obliteration tool"
         echo "Version: $DIV_VERSION"
-        echo "Usage: ./$(basename "$0") <switches/file>"
+        echo "Usage: ./${0##*/} <switches/file>"
         echo "Switches:
 -c: Show credits directly
 -m: Enter menu with no file (Legacy)
@@ -732,7 +746,7 @@ if [[ -n "$1" ]]; then
     fi
     if [[ ! -e "$1" ]]; then
         echo "Invalid file!"
-        echo "Direct file usage: ./$(basename "$0") <file>"
+        echo "Direct file usage: ./${0##*/} <file>"
         exit 1
     fi
     directInFile="1"
