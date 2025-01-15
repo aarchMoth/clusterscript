@@ -737,7 +737,6 @@ if [[ -n "$1" ]]; then
     fi
     directInFile="1"
     _infile=${onetwo##*/}
-    echo $onetwo
     if [[ -e "./${onetwo##*/}" ]]; then
         echo "A file with that name already exists in current directory, use that instead? (Y/N)"
         read -p "" -n 1 -r
