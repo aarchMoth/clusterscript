@@ -26,32 +26,92 @@ thatFancyEffect(){
 }
 
 decideCreditsMusic(){
-    if [[ $RANDOM -lt 4000 ]]; then
-        if [[ $RANDOM -le 9000 ]]; then
-            if [[ $RANDOM -le 13000 ]]; then
-                if [[ $RANDOM -le 777 ]]; then
-                    echo "you are one lucky bitch"
-                    echo "Playing: Credits (secret PV-1000 version, $whoAmI)"
-                    sndplay creditspv1000 -l
+    # TODO: not this
+
+    # stupid ass fucking shit im going to fucking throw this script out a window
+    pcv1="Playing: Credits (PC v1, $whoAmI)"
+    pcv2="Playing: Credits (PC v2, Architect)"
+    opl2="Playing: Credits (OPL2, $whoAmI)"
+    nes="Playing: Credits (2A03 + VRC6, $whoAmI)"
+    vic="Playing: Credits (VIC-20, $whoAmI)"
+    tsu="Playing: Credits (tildearrow Sound Unit, $whoAmI)"
+    pv="Playing: Credits (secret PV-1000 version, $whoAmI)"
+
+    read -t 1 -p "" -n 1 -r
+    echo ""
+    clear
+    if [[ $REPLY =~ ^[Cc]$ ]]; then
+        echo "Choose a track:"
+        echo "PCv1 (1), PCv2 (2), OPL2 (3), 2A03 + VRC6 (4), VIC-20 (5), tildearrow Sound Unit (6)"
+        read -p "" -n 1 -r
+        echo ""
+        clear
+        case $REPLY in
+            1)
+                echo "$pcv1"
+                sndplay creditspcaarch -l
+            ;;
+            2)
+                echo "$pcv2"
+                sndplay creditspcarchitect -l
+            ;;
+            3)
+                echo "$opl2"
+                sndplay creditsopl2 -l
+            ;;
+            4)
+                echo "$nes"
+                sndplay creditsnes -l
+            ;;
+            5)
+                echo "$vic"
+                sndplay creditsvic -l
+            ;;
+            6)
+                echo "$tsu"
+                sndplay creditstsu -l
+            ;;
+            p)
+                echo "why would you willingly listen to this"
+                echo "$pv"
+                isPV=1
+                sndplay creditspv1000 -l
+            ;;
+        esac
+    else
+        if [[ $RANDOM -lt 4000 ]]; then
+            if [[ $RANDOM -le 9000 ]]; then
+                if [[ $RANDOM -le 16384 ]]; then
+                    if [[ $RANDOM -le 2222 ]]; then
+                        echo "you are one lucky bitch"
+                        echo "$pv"
+                        isPV=1
+                        sndplay creditspv1000 -l
+                    else
+                        echo "$vic"
+                        sndplay creditsvic -l
+                    fi
                 else
-                    echo "Playing: Credits (VIC-20, $whoAmI)"
-                    sndplay creditsvic -l
+                    if [[ $RANDOM -lt 9000 ]]; then
+                        echo "$tsu"
+                        sndplay creditstsu -l
+                    else
+                        echo "$nes"
+                        sndplay creditsnes -l
+                    fi
                 fi
             else
-                echo "Playing: Credits (2A03 + VRC6, $whoAmI)"
-                sndplay creditsnes -l
+                echo "$opl2"
+                sndplay creditsopl2 -l
             fi
         else
-            echo "Playing: Credits (OPL2, $whoAmI)"
-            sndplay creditsopl2 -l
-        fi
-    else
-        if [[ $RANDOM -lt 16384 ]]; then
-            echo "Playing: Credits (PC v1, $whoAmI)"
-            sndplay creditspcaarch -l
-        else
-            echo "Playing: Credits (PC v2, Architect)"
-            sndplay creditspcarchitect -l
+            if [[ $RANDOM -lt 16384 ]]; then
+                echo "$pcv1"
+                sndplay creditspcaarch -l
+            else
+                echo "$pcv2"
+                sndplay creditspcarchitect -l
+            fi
         fi
     fi
 }
@@ -61,6 +121,11 @@ credits(){
     eepyTimeShort="0.5"
     eepyTimeLong="2"
     decideCreditsMusic
+    if [[ $isPV -eq 1 ]]; then
+        additionalSong=", PV-1000"
+    else
+        additionalSong=""
+    fi
     echo "[CREDITS]" && echo ""
     sleep $eepyTimeLong
     echo "Creator:"
@@ -75,7 +140,7 @@ credits(){
     sleep $eepyTimeLong
     echo "Music (Credits):"
     sleep $eepyTimeShort
-    thatFancyEffect "$whoAmI (OPL2, 2A03 + VRC6, PC v1, VIC-20)"
+    thatFancyEffect "$whoAmI (OPL2, 2A03 + VRC6, PC v1, VIC-20, tildearrow Sound Unit${additionalSong})"
     thatFancyEffectTwo "Architect (PC v2)" && echo ""
     sleep $eepyTimeLong
     echo "Sounds:"
@@ -174,8 +239,12 @@ AtTheEnd() { # we finished the function!
     if [[ $RANDOM == "5709" ]]; then
         echo "Trans rights!" # some people may get mad over this. those people deserve to get hit over the head with a cast iron skillet
     fi
-    notify "Conversion complete" "Conversion completed with hopefully no errors." convsuccess
-    read -p "Do you want to convert another file? (Y/N) " -n 1 -r
+    notify "Obliteration complete" "Obliteration completed with hopefully no errors." convsuccess
+    time=$SECONDS
+    echo ""
+    echo "Obliteration took $((time / 60)):$((time % 60))"
+    echo ""
+    read -p "Do you want to obliterate another file? (Y/N) " -n 1 -r
     echo ""
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         MainAsk
@@ -189,6 +258,7 @@ LowQualitize() {
         echo "You have not provided a file!"
         MainAskExtended
     fi
+    SECONDS=0
     eepyTime="0.4"
     # the first ClusterScript function ever.
     if [[ -e cluster_result ]]; then
