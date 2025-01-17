@@ -37,7 +37,7 @@ decideCreditsMusic(){
     tsu="Playing: Credits (tildearrow Sound Unit, $whoAmI)"
     pv="Playing: Credits (secret PV-1000 version, $whoAmI)"
 
-    read -t 1 -p "" -n 1 -r
+    read -t 0.1 -p "" -n 1 -r
     echo ""
     clear
     if [[ $REPLY =~ ^[Cc]$ ]]; then
@@ -242,7 +242,7 @@ AtTheEnd() { # we finished the function!
     notify "Obliteration complete" "Obliteration completed with hopefully no errors." convsuccess
     time=$SECONDS
     echo ""
-    echo "Obliteration took $((time / 60)):$((time % 60))"
+    echo "Obliteration took $((time / 60)):$(printf "%02d" "$((time % 60))")"
     echo ""
     read -p "Do you want to obliterate another file? (Y/N) " -n 1 -r
     echo ""
@@ -447,12 +447,31 @@ LowQualitize() {
 
     echo "AAC: [...]"
     sleep "$eepyTime"
-    if [[ -z $(find cluster_result -name "$1_16kbaac_*") ]]; then
-        clrple "AAC: encode"
+    if [[ -z $(find cluster_result -name "$1_*kbaac*") ]]; then
+        clrple "AAC: 16kbps"
         ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a aac -b:a 16k -filter:a "volume=0.5" "cluster_result/$1_16kbaac_$RANDOM.aac" # low quality AAC tends to be loud, decrease volume by 2x to avoid clipping and bursting eardrums
+        clrple "AAC: 8kbps (-aac_coder fast, mono, 8khz)"
+        ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a aac -b:a 8k -ar 8000 -ac 1 -aac_coder fast -filter:a "volume=0.5" "cluster_result/$1_8kbaacfc_$RANDOM.aac"
+        clrple "AAC: 5kbps (-aac_coder fast, stereo, 8khz)"
+        ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a aac -b:a 5k -ar 8000 -aac_coder fast -filter:a "volume=0.5" "cluster_result/$1_5kbaacfc_$RANDOM.aac"
+        clrple "FFmpeg: generate temp AAC"
+        ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a aac -b:a 1k -ar 8000 -aac_coder fast -filter:a "volume=0.5" ".tempaac.aac"
+        clrple "FFmpeg: generate AAFC input"
+        ffmpeg -hide_banner -loglevel error -y -i ".tempaac.aac" -c:a pcm_s16le -ar 44100 -af aresample=resampler=swr:filter_size=1:phase_shift=0:linear_interp=0 ".tempaac.wav"
+        cd cluster_AAFC || return
+        clrple "AAFC: crush to 1-bit PCM"
+        ./aud2aafc -i "../.tempaac.wav" --bps 1 > test.txt
+        clrple "AAFC: convert to WAV"
+        ./aafc2wav "aafc_conversions/.tempaac.aafc" "../cluster_result/$1_1kbaacfc1b_$RANDOM.wav" > /dev/null
+        if [[ $keepTempFiles -ne 1 ]]; then
+            rm "../.tempaac.wav"
+            rm "../.tempaac.aac"
+            rm "aafc_conversions/.tempaac.aafc"
+        fi
+        cd ..
         clrple "AAC: Complete"
     else
-        clrple "AAC: Already generated"
+        clrple "AAC: one or more components already generated (im not fucking developing the Great Wall of If Statements V2 just to check every permutation)"
     fi
 
     echo "Stretch 2x: [                ] (0%)"
