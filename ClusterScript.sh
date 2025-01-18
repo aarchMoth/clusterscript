@@ -451,16 +451,16 @@ LowQualitize() {
         clrple "AAC: 16kbps"
         ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a aac -b:a 16k -filter:a "volume=0.5" "cluster_result/$1_16kbaac_$RANDOM.aac" # low quality AAC tends to be loud, decrease volume by 2x to avoid clipping and bursting eardrums
         clrple "AAC: 8kbps (-aac_coder fast, mono, 8khz)"
-        ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a aac -b:a 8k -ar 8000 -ac 1 -aac_coder fast -filter:a "volume=0.5" "cluster_result/$1_8kbaacfc_$RANDOM.aac"
+        ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a aac -b:a 8k -ar 8000 -ac 1 -aac_coder fast -filter:a "volume=0.9" "cluster_result/$1_8kbaacfc_$RANDOM.aac"
         clrple "AAC: 5kbps (-aac_coder fast, stereo, 8khz)"
-        ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a aac -b:a 5k -ar 8000 -aac_coder fast -filter:a "volume=0.5" "cluster_result/$1_5kbaacfc_$RANDOM.aac"
+        ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a aac -b:a 5k -ar 8000 -aac_coder fast -filter:a "volume=0.9" "cluster_result/$1_5kbaacfc_$RANDOM.aac"
         clrple "FFmpeg: generate temp AAC"
-        ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a aac -b:a 1k -ar 8000 -aac_coder fast -filter:a "volume=0.5" ".tempaac.aac"
+        ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:a aac -b:a 1k -ar 8000 -aac_coder fast -filter:a "volume=0.9" ".tempaac.aac"
         clrple "FFmpeg: generate AAFC input"
         ffmpeg -hide_banner -loglevel error -y -i ".tempaac.aac" -c:a pcm_s16le -ar 44100 -af aresample=resampler=swr:filter_size=1:phase_shift=0:linear_interp=0 ".tempaac.wav"
         cd cluster_AAFC || return
         clrple "AAFC: crush to 1-bit PCM"
-        ./aud2aafc -i "../.tempaac.wav" --bps 1 > test.txt
+        ./aud2aafc -i "../.tempaac.wav" --bps 1 > /dev/null
         clrple "AAFC: convert to WAV"
         ./aafc2wav "aafc_conversions/.tempaac.aafc" "../cluster_result/$1_1kbaacfc1b_$RANDOM.wav" > /dev/null
         if [[ $keepTempFiles -ne 1 ]]; then
@@ -471,7 +471,7 @@ LowQualitize() {
         cd ..
         clrple "AAC: Complete"
     else
-        clrple "AAC: one or more components already generated (im not fucking developing the Great Wall of If Statements V2 just to check every permutation)"
+        clrple "AAC: one or more components already generated (im not fucking developing the Great Wall of If Statements v2 just to check every permutation)"
     fi
 
     echo "Stretch 2x: [                ] (0%)"
@@ -521,12 +521,12 @@ LowQualitize() {
 
 
     if [[ $_2xsAG -ne 1 || $_4xsAG -ne 1 || $_8xsAG -ne 1 && $keepTempFiles -ne 1 ]]; then
-        # MENTAL NOTE: if 2xs, 4xs, and 8xs all generate nothing this doesn't run, but even if ONE ~~happens~~ generates, it runs
         rm ".tempwav.wav"
         rm ".tempstretch.wav"
         rm ".tempstretch2.wav"
     fi
 
+    # GSM, SBC, AMR
     echo "GSM: [...]"
     sleep "$eepyTime"
     if [[ -z $(find cluster_result -name "$1_gsm*") ]]; then
@@ -572,6 +572,7 @@ LowQualitize() {
         clrple "AMR: Already generated"
     fi
 
+    # Vorbis
     if [[ -z $(find cluster_result -name "$1_16kvorbis*") ]]; then
         echo "Vorbis: [...]"
         sleep $eepyTime
@@ -640,6 +641,8 @@ LowQualitizeVideo(){
     fi
 
     echo "Video: [...]"
+
+    # x264, AAC
     sleep $eepyTime
     if [[ -z $(find cluster_result -name "$1_80kbx264aac_*") ]]; then
         clrple "Video: 80k x264, AAC"
@@ -665,6 +668,7 @@ LowQualitizeVideo(){
         sleep $eepyTime
     fi
 
+    # x264, Opus
     if [[ -z $(find cluster_result -name "$1_80kbx264opus_*") ]]; then
         clrple "Video: 80k x264, Opus"
         ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:v libx264 -b:v 80k -c:a libopus -b:a 1k "cluster_result/$1_80kbx264opus_${RANDOM}.mp4"
@@ -689,6 +693,7 @@ LowQualitizeVideo(){
         sleep $eepyTime
     fi
 
+    # FLV
     if [[ -z $(find cluster_result -name "$1_flvmp3_*") ]]; then
         clrple "Video: FLV, MP3"
         ffmpeg -hide_banner -loglevel error -y -i "$1.$2" -c:v flv -b:v 69k -c:a libmp3lame -b:a 32k -ar 11025 "cluster_result/$1_flvmp3_${RANDOM}.flv" # NOTE: Untested
